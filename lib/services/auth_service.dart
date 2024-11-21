@@ -30,4 +30,22 @@ class AuthService {
       throw Exception("Network error or other issue: $e");
     }
   }
+
+
+  Future<bool> signIn(User user) async {
+    final Uri url = Uri.parse(ApiEndpoints.signIn);
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(user.toJson()), // Utilisation du modèle User
+    );
+
+    if (response.statusCode == 200) {
+      // Connexion réussie
+      return true;
+    } else {
+      // Échec de la connexion
+      return false;
+    }
+  }
 }
