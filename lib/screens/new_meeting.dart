@@ -1,99 +1,149 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-
+import '../models/meeting_model.dart';
+import '../services/meeting_service.dart';
 import 'audio_upload.dart';
 
-class CreateMeetingScreen extends StatelessWidget {
+class CreateMeetingScreen extends StatefulWidget {
+  const CreateMeetingScreen({Key? key}) : super(key: key);
+
+  @override
+  _CreateMeetingScreenState createState() => _CreateMeetingScreenState();
+}
+
+class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _sujetController = TextEditingController();
+  final _heureController = TextEditingController();
+  final _participantsController = TextEditingController();
+  final _dateController = TextEditingController();
+
+  final MeetingService _meetingService = MeetingService();
+
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+  }
+
+  Future<void> _loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userId = prefs.getString('userId');
+    });
+  }
+
+  void _createMeeting() async {
+    if (_formKey.currentState!.validate()) {
+      if (_userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("User ID not found. Please log in again.")),
+        );
+        return;
+      }
+
+      final meeting = Meeting(
+        sujetReunion: _sujetController.text,
+        heure: _heureController.text,
+        nombreParticipants: _participantsController.text,
+        date: _dateController.text,
+      );
+
+      try {
+        await _meetingService.createMeeting(meeting);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Meeting created successfully!")),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AudioRecorderScreen(),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to create meeting: $e")),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create a New Meeting'),
+        title: const Text('Create a New Meeting'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Titre pour la création de réunion
-            Text(
-              'Create a New Meeting',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-
-            // Champ pour entrer le titre de la réunion
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Meeting Title',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Champ pour entrer la date de la réunion
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Date and Time',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Champ pour entrer les participants
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Participants',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Graphique (chart) fictif, vous pouvez l'adapter à vos besoins
-            Container(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: false),
-                  titlesData: FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: [
-                        FlSpot(0, 1),
-                        FlSpot(1, 3),
-                        FlSpot(2, 2),
-                        FlSpot(3, 4),
-                      ],
-                      isCurved: true,
-                      colors: [Colors.deepPurple],
-                      barWidth: 3,
-                    ),
-                  ],
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: _sujetController,
+                decoration: const InputDecoration(
+                  labelText: 'Meeting Title',
+                  border: OutlineInputBorder(),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a title';
+                  }
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: 20),
-
-            // Bouton pour créer la réunion
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AudioRecorderScreen()),
-                );
-                // Action pour créer la réunion
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: EdgeInsets.symmetric(vertical: 16),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _heureController,
+                decoration: const InputDecoration(
+                  labelText: 'Time (e.g., 14:00)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the time';
+                  }
+                  return null;
+                },
               ),
-              child: Text(
-                'Create Meeting',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _participantsController,
+                decoration: const InputDecoration(
+                  labelText: 'Number of Participants',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the number of participants';
+                  }
+                  return null;
+                },
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _dateController,
+                decoration: const InputDecoration(
+                  labelText: 'Date (e.g., 2024-11-20)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the date';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _createMeeting,
+                child: const Text('Create Meeting'),
+              ),
+            ],
+          ),
         ),
       ),
     );

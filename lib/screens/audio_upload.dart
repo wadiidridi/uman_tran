@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
@@ -19,6 +21,8 @@ class _AudioRecorderScreenState extends State<AudioRecorderScreen> {
   bool _isRecording = false;
   bool _isPaused = false;
 
+  double _soundLevel = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +38,13 @@ class _AudioRecorderScreenState extends State<AudioRecorderScreen> {
         const SnackBar(content: Text("Microphone permission is required.")),
       );
     }
+
+    _recorder!.setSubscriptionDuration(const Duration(milliseconds: 100));
+    _recorder!.onProgress!.listen((event) {
+      setState(() {
+        _soundLevel = event.decibels ?? 0.0; // Get decibels if available
+      });
+    });
   }
 
   Future<void> _startRecording() async {
@@ -88,9 +99,9 @@ class _AudioRecorderScreenState extends State<AudioRecorderScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.mic, size: 50, color: Colors.red),
-              const SizedBox(height: 16),
               const Text("Recording..."),
+              const SizedBox(height: 16),
+              _buildWaveform(), // Add waveform widget here
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -115,6 +126,22 @@ class _AudioRecorderScreenState extends State<AudioRecorderScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildWaveform() {
+    final barHeight = max(10, _soundLevel * 2); // Scale decibel values
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+        10, // Number of bars
+            (index) => Container(
+          width: 5,
+          height: Random().nextDouble() * barHeight, // Simulated animation
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          color: Colors.red,
+        ),
+      ),
     );
   }
 

@@ -110,7 +110,7 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  Text("File: ${widget.audioFilePath}"),
+                  // Text("File: ${widget.audioFilePath}"),
                 ],
               ),
             ),
@@ -149,7 +149,18 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
             children: [
               ElevatedButton(
                 onPressed: _uploadAudio,
-                child: const Text("Upload Audio"),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white, backgroundColor: Colors.green, // Couleur du texte blanche
+                  textStyle: const TextStyle(
+                    fontSize: 16, // Taille de police
+                    fontWeight: FontWeight.bold, // Texte en gras
+                  ),
+                  elevation: 4, // Ombre pour un effet pro
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8), // Bords arrondis
+                  ),
+                ),
+                child: const Text("Transcription"),
               ),
               ElevatedButton(
                 onPressed: () {}, // Bouton vide sans fonction

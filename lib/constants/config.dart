@@ -6,8 +6,8 @@ class ApiEndpoints {
   static const String signIn = "$baseUrl/auth/login";
 
   // Meeting-related endpoints
-  static const String getMeetings = "$baseUrl/meetings";
-  static const String createMeeting = "$baseUrl/meetings/create";
+  static const String getMeetings = "$baseUrl/meeting'";
+  static const String createMeeting = "$baseUrl/auth/meeting";
 
   // Autres endpoints
   static const String transcription = "$baseUrl/auth/transcribe";

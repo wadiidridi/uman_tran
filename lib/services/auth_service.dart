@@ -1,8 +1,28 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../constants/config.dart';
+
+
+
+
 class AuthService {
+  Future<void> saveAuthData(String userId, String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userId', userId);
+    await prefs.setString('token', token);
+  }
+
+  Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userId');
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
   Future<void> signUp(User user) async {
     final url = Uri.parse(ApiEndpoints.signUp);
 
@@ -18,6 +38,7 @@ class AuthService {
       print("Response Body: ${response.body}");
 
       if (response.statusCode == 201) {
+
         print("Sign up successful!");
       } else {
         // Si le statut n'est pas 201, cela échoue, affiche une erreur avec le corps de la réponse
@@ -41,8 +62,15 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      // Connexion réussie
-      return true;
+      final data = jsonDecode(response.body);
+      final userId = data['userId'];
+      final token = data['token'];
+
+      // Sauvegarder l'userId et le token
+      await saveAuthData(userId, token);
+
+      print("User logged in successfully: $userId");
+      return true; // Connexion réussie
     } else {
       // Échec de la connexion
       return false;
